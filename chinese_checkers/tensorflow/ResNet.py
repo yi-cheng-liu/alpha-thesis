@@ -1,4 +1,4 @@
-import tensorflow.keras as keras
+import keras
 import tensorflow as tf
 import numpy as np
 import os
@@ -37,11 +37,14 @@ class NNetWrapper:
         pi = self.policy_head(x, self.action_size)
 
         v = self.value_head(x)
+        
+        q = self.action_head(x)
 
-        self.model = keras.Model(inputs=inputs, outputs=[pi, v])
+        self.model = keras.Model(inputs=inputs, outputs=[pi, v, q])
         self.model.compile(optimizer='adam',
                       loss={'pi': 'categorical_crossentropy',
-                          'v': 'mean_squared_error'},
+                          'v': 'mean_squared_error', 
+                          'q': 'mean_squared_error'},
                       metrics=['accuracy'])
 
     def res_block(self, input, filter_size):
@@ -71,10 +74,19 @@ class NNetWrapper:
         x = keras.layers.Dense(3)(x)
         v = keras.layers.ReLU(name='v')(x)
         return v
+    
+    def action_head(self, input):
+        x = keras.layers.Dense(256)(input)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.ReLU()(x)
+        x = keras.layers.Dropout(self.dropout)(x)
+        x = keras.layers.Dense(1)(x)
+        q = keras.layers.ReLU(name='q')(x)
+        return q
 
     def train(self, examples):
-        boards, pis, vs = list(zip(*examples))
-        self.model.fit(np.array(boards), [np.array(pis), np.array(vs)], epochs=self.epochs, batch_size=self.batch_size)
+        boards, pis, vs, qs = list(zip(*examples))
+        self.model.fit(np.array(boards), [np.array(pis), np.array(vs), np.array(qs)], epochs=self.epochs, batch_size=self.batch_size)
 
     def predict(self, board):
         """
@@ -84,10 +96,11 @@ class NNetWrapper:
         """
         board = board[np.newaxis, :, :]
         board = board.astype('float32')
-        [pi, v] = self.model.predict(board)
+        [pi, v, q] = self.model.predict(board)
         pi = np.reshape(pi, (self.action_size,))
         v = np.reshape(v, (3,))
-        return pi, v
+        q = np.reshape(q, (1,))
+        return pi, v, q
 
     def predict_parallel(self, boards):
         """

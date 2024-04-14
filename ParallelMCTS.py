@@ -18,6 +18,7 @@ class MCTS:
         self.Nsa = {}  # stores #times edge s,a was visited
         self.Ns = {}  # stores #times board s was visited
         self.Ps = {}  # stores initial policy (returned by neural net)
+        self.Qs = {}  # stores action values for s
         self.Loop = []
         self.Visited = []
         self.Es = {}  # stores game.getGameEnded ended for board s
@@ -101,6 +102,7 @@ class MCTS:
         self.Nsa = {}  # stores #times edge s,a was visited
         self.Ns = {}  # stores #times board s was visited
         self.Ps = {}  # stores initial policy (returned by neural net)
+        self.Qs = {}  # stores action values for s
 
         self.Es = {}  # stores game.getGameEnded ended for board s
         self.Vs = {}  # stores game.getValidMoves for board s
@@ -134,7 +136,7 @@ class MCTS:
     def get_done(self):
         return self.iter == self.args.numMCTSSims
 
-    def update_predictions(self, pi, v):
+    def update_predictions(self, pi, v, qi):
         """
         updates values inside the tree after prediction by the neural network is received and back-propagates them
         :param pi:  predicted pi

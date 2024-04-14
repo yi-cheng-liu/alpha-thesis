@@ -67,7 +67,8 @@ class Coach:
                 episode_step += 1
                 canonical_board = self.game.getCanonicalForm(board, cur_player)
                 pi = self.initialize_agent.get_action_prob(canonical_board, 1)
-                train_examples.append([canonical_board, cur_player, pi, None])
+                qi = self.initialize_agent.get_q_values(canonical_board, 1)
+                train_examples.append([canonical_board, cur_player, pi, None, qi])
                 action = np.random.choice(len(pi), p=pi)
             else:
                 action = self.game.getActionSize() - 1
@@ -79,7 +80,7 @@ class Coach:
         scores_player_two = np.array([scores[1], scores[2], scores[0]])
         scores_player_three = np.array([scores[2], scores[0], scores[1]])
         scores_all = [scores, scores_player_two, scores_player_three]
-        return [(x[0], x[2], scores_all[x[1]-1]) for x in train_examples]
+        return [(x[0], x[2], scores_all[x[1]-1], x[4]) for x in train_examples]
 
     def execute_episodes(self):
         """
@@ -108,8 +109,8 @@ class Coach:
                 print(str(matches_over) + "/" + str(self.args.parallel_block) + " games decided!")
 
             if len(update_indices) > 0:
-                pis, vs = self.nnet.predict_parallel(valid_requests)
-                self.update_predictions(pis, vs, update_indices)
+                pis, vs, qs = self.nnet.predict_parallel(valid_requests)
+                self.update_predictions(pis, vs, update_indices, qs)
             if it % self.args.numMCTSSims == 0:
                 end_time = time.time()
                 print(str(int(it/self.args.numMCTSSims)) + " steps: " + str(int(end_time-start_time)) + "s")
@@ -162,7 +163,7 @@ class Coach:
 
         return all_request_states
 
-    def update_predictions(self, pis, vs, update_indices):
+    def update_predictions(self, pis, vs, update_indices, qs):
         """
         updates the values inside the tree searches
         :param pis: predicted pi values
@@ -172,7 +173,7 @@ class Coach:
         for i in range(len(update_indices)):
             index = update_indices[i]
             mcts = self.mctss[index]
-            mcts.update_predictions(pis[i,:], vs[i,:])
+            mcts.update_predictions(pis[i,:], vs[i,:], qs[i,:])
 
     def compile_train_examples(self):
         """

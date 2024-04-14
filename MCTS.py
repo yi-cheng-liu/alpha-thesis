@@ -18,6 +18,7 @@ class MCTS:
         self.Nsa = {}  # stores #times edge s,a was visited
         self.Ns = {}  # stores #times board s was visited
         self.Ps = {}  # stores initial policy (returned by neural net)
+        self.Qs = {}  # stores action values for s
         self.Loop = {}
         self.Visited = []
         self.wrong_predictions = [0, 0]
@@ -58,6 +59,16 @@ class MCTS:
         probs = [x / float(sum_counts) for x in counts]
         return probs
 
+    def get_q_values(self, board, player):
+        """
+        :param board:   current board
+        :param player:  current player
+        :return:        q values
+        """
+        s = self.game.stringRepresentation(board)
+        q_values = [self.Qs[(s, a, player)] if (s, a, player) in self.Qs else 0 for a in range(self.game.getActionSize())]
+        return q_values
+    
     def search(self, board, player, depth):
         """
         recursive search function
@@ -97,7 +108,7 @@ class MCTS:
 
                 print("CUT LEAF")
             # leaf node
-            self.Ps[(s, player)], scores_nn = self.nnet.predict(canonical_board)
+            self.Ps[(s, player)], scores_nn, scores_qi = self.nnet.predict(canonical_board)
             if player == 2:
                 scores_nn = np.array([scores_nn[2], scores_nn[0], scores_nn[1]])
             elif player == 3:

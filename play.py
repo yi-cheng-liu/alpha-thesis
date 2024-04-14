@@ -13,7 +13,7 @@ args = dotdict({
     'cpuct': 15,
     'max_steps': 600,
 
-    'load_folder_file': ('checkpoint', 41),
+    'load_folder_file': ('checkpoint', 1),
 })
 
 args2 = dotdict({
@@ -21,7 +21,7 @@ args2 = dotdict({
     'cpuct': 15,
     'max_steps': 600,
 
-    'load_folder_file': ('checkpoint', 12),
+    'load_folder_file': ('checkpoint', 1),
 })
 game = ChineseCheckersGame()
 gui = GUI(1)

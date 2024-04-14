@@ -61,7 +61,10 @@ class Coach:
                 else:
                     pi = self.mcts.get_action_prob(self.board, self.curPlayer)
                 # print(max(pi))
-                train_examples.append([canonicalBoard, self.curPlayer, pi, None])
+                
+                # Get action value
+                qi = self.mcts.get_q_values(self.board, self.curPlayer)
+                train_examples.append([canonicalBoard, self.curPlayer, pi, None, qi])
 
                 action = np.random.choice(len(pi), p=pi)
             else:
@@ -76,7 +79,7 @@ class Coach:
         if not first:
             print("GAME OVER! Step" + str(episodeStep))
             print(self.board)
-        return [(x[0], x[2], scores_all[x[1]-1]) for x in train_examples]
+        return [(x[0], x[2], scores_all[x[1]-1, x[4]]) for x in train_examples]
 
     def learn(self):
         """

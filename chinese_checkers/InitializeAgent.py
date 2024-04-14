@@ -3,7 +3,7 @@ class InitializeAgent:
     def __init__(self, game):
         self.game = game
 
-    def get_action_prob(self, board, player, best):
+    def get_action_prob(self, board, player):
         """
         :param board:   current board
         :param player:  current player
@@ -32,3 +32,12 @@ class InitializeAgent:
         probs = [x/float(sum_probs) for x in probs]
 
         return probs
+
+    def get_q_values(self, board, player):
+        """
+        :param board:   current board
+        :param player:  current player
+        :return:        q values
+        """
+        q_values = [0] * self.game.getActionSize()
+        return q_values
