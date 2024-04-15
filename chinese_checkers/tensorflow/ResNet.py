@@ -43,19 +43,26 @@ class NNetWrapper:
         self.model = keras.Model(inputs=inputs, outputs=[pi, v, q])
 
         # custom loss function
-        def q_loss(q_true, q_pred):
-            return K.mean(K.square(q_true + q_pred), axis=-1)
-        
-        Lp = K.square(v[0,0]+q)
-        self.model.add_loss(Lp)
+        def Lp_loss(v, q):
+            min_q = tf.reduce_min(q, axis=1)
+            q_v_sum = min_q + v
+            squared_diff = tf.square(q_v_sum)
+            return tf.reduce_mean(tf.reduce_sum(squared_diff, axis=1))
+        self.model.add_loss(Lp_loss(v, q))
 
-        Lq = K.maximum(v[0,0], 0.0) / self.action_size * K.square(v[0,0] + q)
-        self.model.add_loss(Lq)
+        def Lq_loss(v, q):
+            v_0 = v[:,0]
+            max_term = tf.maximum(v_0, 0.0) # shape: (batch,)
+            v_q_sum = v_0[:, tf.newaxis] + q # shape: (batch, action_size)
+            sum_q = tf.reduce_sum(v_q_sum, axis=1) # shape: (batch,)
+            squared_sum = tf.reduce_sum(tf.square(sum_q)) # shape: (batch,)
+            return tf.reduce_mean(max_term / self.action_size * squared_sum)
+        self.model.add_loss(Lq_loss(v, q))
 
         self.model.compile(optimizer='adam',
                       loss={'pi': 'categorical_crossentropy',
                           'v': 'mean_squared_error', 
-                          'q': q_loss},
+                          'q': 'mean_squared_error'},
                       metrics=['accuracy'])
 
     def res_block(self, input, filter_size):
