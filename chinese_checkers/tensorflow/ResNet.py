@@ -45,9 +45,9 @@ class NNetWrapper:
         # custom loss function
         def Lp_loss(v, q):
             min_q = tf.reduce_min(q, axis=1)
-            q_v_sum = min_q + v
+            q_v_sum = min_q + v[:, 0]
             squared_diff = tf.square(q_v_sum)
-            return tf.reduce_mean(tf.reduce_sum(squared_diff, axis=1))
+            return tf.reduce_mean(tf.reduce_sum(squared_diff))
         self.model.add_loss(Lp_loss(v, q))
 
         def Lq_loss(v, q):
