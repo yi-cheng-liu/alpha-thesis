@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import os
 from utils import dotdict
-from tensorflow.keras import backend as K
+from keras import backend as K
 
 class NNetWrapper:
 
@@ -42,26 +42,9 @@ class NNetWrapper:
 
         self.model = keras.Model(inputs=inputs, outputs=[pi, v, q])
 
-        # custom loss function
-        def Lp_loss(v, q):
-            min_q = tf.reduce_min(q, axis=1)
-            q_v_sum = min_q + v[:, 0]
-            squared_diff = tf.square(q_v_sum)
-            return tf.reduce_mean(tf.reduce_sum(squared_diff))
-        self.model.add_loss(Lp_loss(v, q))
-
-        def Lq_loss(v, q):
-            v_0 = v[:,0]
-            max_term = tf.maximum(v_0, 0.0) # shape: (batch,)
-            v_q_sum = v_0[:, tf.newaxis] + q # shape: (batch, action_size)
-            sum_q = tf.reduce_sum(v_q_sum, axis=1) # shape: (batch,)
-            squared_sum = tf.reduce_sum(tf.square(sum_q)) # shape: (batch,)
-            return tf.reduce_mean(max_term / self.action_size * squared_sum)
-        self.model.add_loss(Lq_loss(v, q))
-
         self.model.compile(optimizer='adam',
                       loss={'pi': 'categorical_crossentropy',
-                          'v': 'mean_squared_error', 
+                          'v': 'mean_squared_error',
                           'q': 'mean_squared_error'},
                       metrics=['accuracy'])
 
@@ -102,8 +85,29 @@ class NNetWrapper:
         q = keras.layers.ReLU(name='q')(x)
         return q
 
+    def Lp_loss(self, v, q):
+        min_q = tf.reduce_min(q, axis=1)
+        q_v_sum = min_q + v[:, 0]
+        squared_diff = tf.square(q_v_sum)
+        return tf.reduce_mean(tf.reduce_sum(squared_diff))
+    
+    def Lq_loss(self, v, q):
+        v_0 = v[:, 0]
+        max_term = tf.maximum(v_0, tf.constant(0.0, dtype=v_0.dtype))  # Ensure the dtype matches v_0's dtype
+        v_q_sum = v_0[:, tf.newaxis] + q  # shape: (batch, action_size)
+        sum_q = tf.reduce_sum(v_q_sum, axis=1)  # shape: (batch,)
+        squared_sum = tf.reduce_sum(tf.square(sum_q))  # shape: (batch,)
+        return tf.reduce_mean(max_term / self.action_size * squared_sum)
+
     def train(self, examples):
         boards, pis, vs, qs = list(zip(*examples))
+
+        vs_nparray = np.array(vs, dtype=np.float32)  # Assuming vs should be float32
+        qs_nparray = np.array(qs, dtype=np.float32)  # Assuming qs should be float32
+        # self.model.add_loss(lambda: self.Lp_loss(vs_nparray, qs_nparray))
+        # self.model.add_loss(lambda: self.Lq_loss(vs_nparray, qs_nparray))
+        print(self.model.losses)
+        
         self.model.fit(np.array(boards), [np.array(pis), np.array(vs), np.array(qs)], epochs=self.epochs, batch_size=self.batch_size)
 
     def predict(self, board):
@@ -157,3 +161,5 @@ class NNetWrapper:
         filename = "checkpoint_" + str(iteration) + ".h5"
         filepath = os.path.join(folder, filename)
         self.model = keras.models.load_model(filepath)
+
+
