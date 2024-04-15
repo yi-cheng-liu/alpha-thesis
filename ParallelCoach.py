@@ -138,7 +138,8 @@ class Coach:
                         mcts.Visited.append(s)
                         canonical_board = self.game.getCanonicalForm(board, cur_player)
                         pi = mcts.get_counts(board, cur_player)
-                        self.all_train_examples[n].append([canonical_board, cur_player, pi])
+                        qi = mcts.get_q_values(board, cur_player)
+                        self.all_train_examples[n].append([canonical_board, cur_player, pi, None, qi])
                         if self.all_episode_steps[n] > 30:
                             best_actions = np.zeros(self.game.getActionSize())
                             best_actions[np.where(pi == np.amax(pi))] = 1
@@ -187,7 +188,7 @@ class Coach:
             scores_player_two = np.array([scores[1], scores[2], scores[0]])
             scores_player_three = np.array([scores[2], scores[0], scores[1]])
             scores_list = [scores, scores_player_two, scores_player_three]
-            single_examples_processed = [(x[0], x[2], scores_list[x[1] - 1]) for x in single_examples]
+            single_examples_processed = [(x[0], x[2], scores_list[x[1] - 1], x[4]) for x in single_examples]
             train_examples += single_examples_processed
 
         return train_examples

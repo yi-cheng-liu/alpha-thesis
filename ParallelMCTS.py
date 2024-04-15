@@ -133,6 +133,16 @@ class MCTS:
 
         return probs
 
+    def get_q_values(self, board, player):
+        """
+        :param board:   current board
+        :param player:  current player
+        :return:        q values
+        """
+        s = self.game.stringRepresentation(board)
+        q_values = [self.Qs[(s, a, player)] if (s, a, player) in self.Qs else 0 for a in range(self.game.getActionSize())]
+        return q_values
+
     def get_done(self):
         return self.iter == self.args.numMCTSSims
 
