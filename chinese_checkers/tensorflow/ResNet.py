@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import os
 from utils import dotdict
-
+from tensorflow.keras import backend as K
 
 class NNetWrapper:
 
@@ -41,10 +41,21 @@ class NNetWrapper:
         q = self.action_head(x)
 
         self.model = keras.Model(inputs=inputs, outputs=[pi, v, q])
+
+        # custom loss function
+        def q_loss(q_true, q_pred):
+            return K.mean(K.square(q_true + q_pred), axis=-1)
+        
+        Lp = K.square(v[0,0]+q)
+        self.model.add_loss(Lp)
+
+        Lq = K.maximum(v[0,0], 0.0) / self.action_size * K.square(v[0,0] + q)
+        self.model.add_loss(Lq)
+
         self.model.compile(optimizer='adam',
                       loss={'pi': 'categorical_crossentropy',
                           'v': 'mean_squared_error', 
-                          'q': 'mean_squared_error'},
+                          'q': q_loss},
                       metrics=['accuracy'])
 
     def res_block(self, input, filter_size):
