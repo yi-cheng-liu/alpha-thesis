@@ -3,7 +3,7 @@ class InitializeAgent:
     def __init__(self, game):
         self.game = game
 
-    def get_action_prob(self, board, player, best):
+    def get_action_prob(self, board, player):
         """
         :param board:   current board
         :param player:  current player

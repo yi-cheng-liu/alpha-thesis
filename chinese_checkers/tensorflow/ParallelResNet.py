@@ -65,6 +65,7 @@ class NNetWrapper:
 
     def train(self, examples):
         boards, pis, vs = list(zip(*examples))
+        print(f'keras loss: {self.model.losses}')
         self.model.fit(np.array(boards), [np.array(pis), np.array(vs)], epochs=self.epochs, batch_size=self.batch_size)
 
     def predict(self, board):
