@@ -2,7 +2,8 @@
 
 from ParallelCoach import Coach
 from chinese_checkers.TinyChineseCheckersGame import ChineseCheckersGame as Game
-from chinese_checkers.tensorflow.ResNet import NNetWrapper as nn
+# from chinese_checkers.tensorflow.ResNet import NNetWrapper as nn
+from chinese_checkers.tensorflow.ResNet_torch import NNetWrapper as nn
 from utils import *
 import numpy as np
 import sys
@@ -35,7 +36,7 @@ args = dotdict({
     'parallel_block': 5,
     'greedy_eps': 50,
 
-    'checkpoint': 'checkpoint',
+    'checkpoint': 'checkpoint_pytorch',
     'load_model': False,
     'load_folder_file': ('checkpoint', 37),
     'load_example': ('checkpoint', 38),

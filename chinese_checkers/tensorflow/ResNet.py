@@ -42,11 +42,31 @@ class NNetWrapper:
 
         self.model = keras.Model(inputs=inputs, outputs=[pi, v, q])
 
+        # # custom loss function
+        # def Lp_loss(v, q):
+        #     min_q = tf.reduce_min(q, axis=1)
+        #     q_v_sum = min_q + v[:, 0]
+        #     squared_diff = tf.square(q_v_sum)
+        #     return tf.reduce_mean(tf.reduce_sum(squared_diff))
+        # self.model.add_loss(self.Lp_loss(v, q))
+
+        # def Lq_loss(v, q):
+        #     v_0 = v[:,0]
+        #     max_term = tf.maximum(v_0, 0.0) # shape: (batch,)
+        #     v_q_sum = v_0[:, tf.newaxis] + q # shape: (batch, action_size)
+        #     sum_q = tf.reduce_sum(v_q_sum, axis=1) # shape: (batch,)
+        #     squared_sum = tf.reduce_sum(tf.square(sum_q)) # shape: (batch,)
+        #     return tf.reduce_mean(max_term / self.action_size * squared_sum)
+        # self.model.add_loss(Lq_loss(v, q))
         self.model.compile(optimizer='adam',
+                    #   loss=CustomMSE(),
                       loss={'pi': 'categorical_crossentropy',
                           'v': 'mean_squared_error',
                           'q': 'mean_squared_error'},
                       metrics=['accuracy'])
+    
+    def q_loss(self, q_true, q_pred):
+            return K.mean(K.square(q_true + q_pred), axis=-1)
 
     def res_block(self, input, filter_size):
         x = keras.layers.Conv2D(filter_size, kernel_size=3, padding='same')(input)
@@ -102,13 +122,14 @@ class NNetWrapper:
     def train(self, examples):
         boards, pis, vs, qs = list(zip(*examples))
 
-        vs_nparray = np.array(vs, dtype=np.float32)  # Assuming vs should be float32
-        qs_nparray = np.array(qs, dtype=np.float32)  # Assuming qs should be float32
+        # vs_nparray = np.array(vs, dtype=np.float32)  # Assuming vs should be float32
+        # qs_nparray = np.array(qs, dtype=np.float32)  # Assuming qs should be float32
         # self.model.add_loss(lambda: self.Lp_loss(vs_nparray, qs_nparray))
         # self.model.add_loss(lambda: self.Lq_loss(vs_nparray, qs_nparray))
-        print(self.model.losses)
+        # print("====loss====", self.model.losses)
         
         self.model.fit(np.array(boards), [np.array(pis), np.array(vs), np.array(qs)], epochs=self.epochs, batch_size=self.batch_size)
+        print("====loss====", self.model.losses)
 
     def predict(self, board):
         """
@@ -150,7 +171,10 @@ class NNetWrapper:
         :param filename:
         """
         filepath = os.path.join(folder, filename)
-        self.model = keras.models.load_model(filepath)
+        self.model = keras.models.load_model(filepath, compile=False)
+        # self.model.compile(optimizer='adam',
+        #               loss=CustomMSE(),
+        #               metrics=['accuracy'])
 
     def load_first_checkpoint(self, folder, iteration):
         """

@@ -109,6 +109,10 @@ class MCTS:
                 print("CUT LEAF")
             # leaf node
             self.Ps[(s, player)], scores_nn, scores_qi = self.nnet.predict(canonical_board)
+            # (320,) (3,) (1,)
+            self.Ps[(s, player)] = self.Ps[(s, player)].flatten()
+            scores_nn = scores_nn.flatten()
+            scores_qi = scores_qi.flatten()
             if player == 2:
                 scores_nn = np.array([scores_nn[2], scores_nn[0], scores_nn[1]])
             elif player == 3:

@@ -139,7 +139,8 @@ class Coach:
             self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='temp.h5')
             self.pnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.h5')
 
-            self.nnet.train(trainExamples)
+            # train the agent
+            self.nnet.fit(trainExamples)
 
             print('PITTING AGAINST PREVIOUS VERSION')
 
