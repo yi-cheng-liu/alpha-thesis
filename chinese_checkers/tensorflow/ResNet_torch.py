@@ -131,8 +131,8 @@ class NNetWrapper(nn.Module):
             pi_losses = AverageMeter()
             v_losses = AverageMeter()
             q_losses = AverageMeter()
-            lp_losses = AverageMeter()
-            lq_losses = AverageMeter()
+            # lp_losses = AverageMeter()
+            # lq_losses = AverageMeter()
 
             batch_count = int(len(examples) / self.batch_size)
             t = tqdm(range(batch_count), desc='Training Net')
@@ -149,17 +149,17 @@ class NNetWrapper(nn.Module):
                 l_pi = self.loss_pi(target_pis, out_pi)
                 l_v = self.loss_v(target_vs, out_v)
                 l_q = self.loss_q(target_vs, out_q)
-                l_Lp = self.loss_Lp(out_v, out_q)
-                l_Lq = self.loss_Lq(target_vs, out_q)
-                total_loss = l_pi + l_v + l_q + l_Lp + l_Lq
+                # l_Lp = self.loss_Lp(out_v, out_q)
+                # l_Lq = self.loss_Lq(target_vs, out_q)
+                total_loss = l_pi + l_v + l_q # + l_Lp + l_Lq
 
                 # record loss
                 pi_losses.update(l_pi.item(), boards.size(0))
                 v_losses.update(l_v.item(), boards.size(0))
                 q_losses.update(l_q.item(), boards.size(0))
-                lp_losses.update(l_Lp.item(), boards.size(0))
-                lq_losses.update(l_Lq.item(), boards.size(0))
-                t.set_postfix(Loss_pi=pi_losses, Loss_v=v_losses, Loss_q=q_losses, Loss_Lp=lp_losses, Loss_Lq=lq_losses)
+                # lp_losses.update(l_Lp.item(), boards.size(0))
+                # lq_losses.update(l_Lq.item(), boards.size(0))
+                t.set_postfix(Loss_pi=pi_losses, Loss_v=v_losses, Loss_q=q_losses) #, Loss_Lp=lp_losses, Loss_Lq=lq_losses)
 
                 # compute gradient and do SGD step
                 self.optimizer.zero_grad()
