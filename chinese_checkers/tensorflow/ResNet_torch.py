@@ -99,7 +99,8 @@ class NNetWrapper(nn.Module):
         return self.predict(boards)
     
     def loss_pi(self, targets, outputs):
-        return -torch.sum(targets * outputs) / targets.size()[0]
+        # return -torch.sum(targets * outputs) / targets.size()[0]
+        return torch.sum(-targets*(outputs+1e-5).log(), dim=1).mean()
     
     def loss_v(self, targets, outputs):
         return torch.sum((targets - outputs) ** 2) / targets.size()[0]
