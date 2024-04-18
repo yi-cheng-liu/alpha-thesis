@@ -1,6 +1,7 @@
 from utils import *
 from chinese_checkers.TinyChineseCheckersGame import ChineseCheckersGame
-from chinese_checkers.tensorflow.ResNet import NNetWrapper as nn
+# from chinese_checkers.tensorflow.ResNet import NNetWrapper as nn
+from chinese_checkers.tensorflow.ResNet_torch import NNetWrapper as nn
 from chinese_checkers.Evaluator import Evaluator
 from MCTS import MCTS
 from chinese_checkers.InitializeAgent import InitializeAgent
@@ -13,7 +14,7 @@ args = dotdict({
     'cpuct': 15,
     'max_steps': 600,
 
-    'load_folder_file': ('checkpoint', 1),
+    'load_folder_file': ('checkpoint_pytorch', 2),
 })
 
 args2 = dotdict({

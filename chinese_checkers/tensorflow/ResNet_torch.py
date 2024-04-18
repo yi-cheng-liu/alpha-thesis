@@ -223,7 +223,10 @@ class NNetWrapper(nn.Module):
         """
         filename = "checkpoint_" + str(iteration) + ".h5"
         filepath = os.path.join(folder, filename)
-        self.load_state_dict(torch.load(filepath))
+        map_location = None if torch.cuda.is_available() else 'cpu'
+        checkpoint = torch.load(filepath, map_location=map_location)
+        self.load_state_dict(checkpoint['state_dict'])
+        # self.load_state_dict(torch.load(filepath))
 
 
 
