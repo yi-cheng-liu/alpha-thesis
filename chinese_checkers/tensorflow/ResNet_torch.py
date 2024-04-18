@@ -38,7 +38,7 @@ class ResBlock(nn.Module):
         out += residual
         return F.relu(out)
 
-class Head(nn.Module):
+class PolicyHead(nn.Module):
     def __init__(self, in_size, action_size):
         super(Head, self).__init__()
         self.fc1 = nn.Linear(in_size, 256)
@@ -51,6 +51,20 @@ class Head(nn.Module):
         x = self.dropout(x)
         x = self.fc2(x)
         return F.softmax(x, dim=1)
+
+class ValueHead(nn.Module):
+    def __init__(self, in_size, out_size):
+        super(Head, self).__init__()
+        self.fc1 = nn.Linear(in_size, 256)
+        self.fc_bn1 = nn.BatchNorm1d(256)
+        self.dropout = nn.Dropout(p=0.3)
+        self.fc2 = nn.Linear(256, out_size)
+    
+    def forward(self, x):
+        x = F.relu(self.fc_bn1(self.fc1(x)))
+        x = self.dropout(x)
+        x = self.fc2(x)
+        return F.Relu(x, dim=1)
 
 class NNetWrapper(nn.Module):
     def __init__(self, game):
@@ -66,9 +80,9 @@ class NNetWrapper(nn.Module):
         self.bn = nn.BatchNorm2d(self.num_channels)
         self.res_blocks = nn.Sequential(*[ResBlock(self.num_channels) for _ in range(8)])
 
-        self.policy_head = Head(self.board_y*self.board_x*self.num_channels, self.action_size)
-        self.value_head = Head(self.board_y*self.board_x*self.num_channels, 3)
-        self.action_head = Head(self.board_y*self.board_x*self.num_channels, 1)
+        self.policy_head = PolicyHead(self.board_y*self.board_x*self.num_channels, self.action_size)
+        self.value_head = ValueHead(self.board_y*self.board_x*self.num_channels, 3)
+        self.action_head = ValueHead(self.board_y*self.board_x*self.num_channels, 1)
         self.optimizer = torch.optim.Adam(self.parameters())
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
