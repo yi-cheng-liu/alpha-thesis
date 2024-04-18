@@ -10,6 +10,7 @@ from random import shuffle
 import gc
 from chinese_checkers.InitializeAgent import InitializeAgent
 from chinese_checkers.TinyChineseCheckersGame import ChineseCheckersGame
+import wandb
 
 
 class Coach:
@@ -265,6 +266,7 @@ class Coach:
                 print('PITTING AGAINST PREVIOUS VERSION')
                 arena = Arena(pmcts, nmcts, self.game, self.args)
                 scores = arena.playGames(self.args.arenaCompare)
+                print("PLAY SCORE", scores, float(scores[1]) / sum(scores))
 
                 if scores[1] == 0 or float(scores[1]) / sum(scores) < self.args.updateThreshold:
                     print('REJECTING NEW MODEL')

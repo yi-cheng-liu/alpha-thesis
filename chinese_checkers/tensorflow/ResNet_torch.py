@@ -65,7 +65,7 @@ class ValueHead(nn.Module):
         x = F.relu(self.fc_bn1(self.fc1(x)))
         x = self.dropout(x)
         x = self.fc2(x)
-        return F.relu(x, dim=1)
+        return F.relu(x)
 
 class NNetWrapper(nn.Module):
     def __init__(self, game):
@@ -77,16 +77,17 @@ class NNetWrapper(nn.Module):
         self.epochs = 5
         self.batch_size = 64
 
-        self.input_layer = nn.Conv2d(1, self.num_channels, kernel_size=3, padding=1)
-        self.bn = nn.BatchNorm2d(self.num_channels)
-        self.res_blocks = nn.Sequential(*[ResBlock(self.num_channels) for _ in range(8)])
-
-        self.policy_head = PolicyHead(self.board_y*self.board_x*self.num_channels, self.action_size)
-        self.value_head = ValueHead(self.board_y*self.board_x*self.num_channels, 3)
-        self.action_head = ValueHead(self.board_y*self.board_x*self.num_channels, 1)
-        self.optimizer = torch.optim.Adam(self.parameters())
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+        self.input_layer = nn.Conv2d(1, self.num_channels, kernel_size=3, padding=1).to(self.device)
+        self.bn = nn.BatchNorm2d(self.num_channels).to(self.device)
+        self.res_blocks = nn.Sequential(*[ResBlock(self.num_channels) for _ in range(8)]).to(self.device)
+
+        self.policy_head = PolicyHead(self.board_y*self.board_x*self.num_channels, self.action_size).to(self.device)
+        self.value_head = ValueHead(self.board_y*self.board_x*self.num_channels, 3).to(self.device)
+        self.action_head = ValueHead(self.board_y*self.board_x*self.num_channels, 1).to(self.device)
+        self.optimizer = torch.optim.Adam(self.parameters())
+        
     def forward(self, x):
         x = x.view(-1, 1, self.board_y, self.board_x)  # Reshape input to (batch_size, channels, H, W)
         x = F.relu(self.bn(self.input_layer(x)))
@@ -105,7 +106,7 @@ class NNetWrapper(nn.Module):
         """
         self.eval()  # Set the model to evaluation mode
         with torch.no_grad():
-            board = torch.tensor(board, dtype=torch.float32)
+            board = torch.tensor(board, dtype=torch.float32).to(self.device)
             pi, v, q = self(board)
             self.train()  # Set the model back to training mode
             return pi.data.cpu().numpy(), v.data.cpu().numpy(), q.data.cpu().numpy()
@@ -155,10 +156,10 @@ class NNetWrapper(nn.Module):
             for _ in t:
                 sample_ids = np.random.randint(len(examples), size=self.batch_size)
                 boards, pis, vs, qs = list(zip(*[examples[i] for i in sample_ids]))
-                boards = torch.FloatTensor(np.array(boards).astype(np.float64))
-                target_pis = torch.FloatTensor(np.array(pis))
-                target_vs = torch.FloatTensor(np.array(vs).astype(np.float64))
-                target_qs = torch.FloatTensor(np.array(qs).astype(np.float64))
+                boards = torch.FloatTensor(np.array(boards).astype(np.float64)).to(self.device)
+                target_pis = torch.FloatTensor(np.array(pis)).to(self.device)
+                target_vs = torch.FloatTensor(np.array(vs).astype(np.float64)).to(self.device)
+                target_qs = torch.FloatTensor(np.array(qs).astype(np.float64)).to(self.device)
 
                 # compute output
                 out_pi, out_v, out_q = self(boards)
