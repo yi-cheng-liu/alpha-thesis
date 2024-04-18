@@ -2,7 +2,8 @@
 getent passwd $(id --user) > $HOME/.$(id --user).passwd
 getent group $(id --groups) > $HOME/.$(id --user).group
 
-docker build -t wanhanxi/cca:tf .
+docker build -t wanhanxi/cca .
+mkdir -p ~/temp
 
 # Mount user information and project folder for running
 docker run -itd                                         \
@@ -15,11 +16,11 @@ docker run -itd                                         \
      -v /tmp/.X11-unix/:/tmp/.X11-unix/                 \
      -v /usr/bin/prime-run:/usr/bin/prime-run           \
      -v ~/.Xauthority:/root/.Xauthority:rw              \
-     -v .:/workspace/cca                             \
+     -v ${PWD}/:/workspace/cca                                \
      -v ~/temp:/home/$(whoami)                          \
      --privileged                                       \
      --network host                                     \
-     --name whxccatf wanhanxi/cca:tf
+     --name whxcca wanhanxi/cca
 
 # If fails, use the following command to run the container
 # docker run -itd \

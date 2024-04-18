@@ -11,4 +11,4 @@ checkpoint_pytorch/
 
 # For PyCharm users
 .idea/
-
+wandb

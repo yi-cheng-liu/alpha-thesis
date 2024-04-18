@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import numpy as np
 import os
 from tqdm import tqdm
+import wandb
 
 class AverageMeter(object):
     """From https://github.com/pytorch/examples/blob/master/imagenet/main.py"""
@@ -40,7 +41,7 @@ class ResBlock(nn.Module):
 
 class PolicyHead(nn.Module):
     def __init__(self, in_size, action_size):
-        super(Head, self).__init__()
+        super(PolicyHead, self).__init__()
         self.fc1 = nn.Linear(in_size, 256)
         self.fc_bn1 = nn.BatchNorm1d(256)
         self.dropout = nn.Dropout(p=0.3)
@@ -54,7 +55,7 @@ class PolicyHead(nn.Module):
 
 class ValueHead(nn.Module):
     def __init__(self, in_size, out_size):
-        super(Head, self).__init__()
+        super(ValueHead, self).__init__()
         self.fc1 = nn.Linear(in_size, 256)
         self.fc_bn1 = nn.BatchNorm1d(256)
         self.dropout = nn.Dropout(p=0.3)
@@ -64,7 +65,7 @@ class ValueHead(nn.Module):
         x = F.relu(self.fc_bn1(self.fc1(x)))
         x = self.dropout(x)
         x = self.fc2(x)
-        return F.Relu(x, dim=1)
+        return F.relu(x, dim=1)
 
 class NNetWrapper(nn.Module):
     def __init__(self, game):
@@ -175,6 +176,7 @@ class NNetWrapper(nn.Module):
                 # lp_losses.update(l_Lp.item(), boards.size(0))
                 # lq_losses.update(l_Lq.item(), boards.size(0))
                 t.set_postfix(Loss_pi=pi_losses, Loss_v=v_losses, Loss_q=q_losses) #, Loss_Lp=lp_losses, Loss_Lq=lq_losses)
+                wandb.log({"Loss_pi": pi_losses.avg, "Loss_v": v_losses.avg, "Loss_q": q_losses.avg}) #, "Loss_Lp": lp_losses.avg, "Loss_Lq": lq_losses.avg
 
                 # compute gradient and do SGD step
                 self.optimizer.zero_grad()

@@ -7,6 +7,10 @@ from chinese_checkers.tensorflow.ResNet_torch import NNetWrapper as nn
 from utils import *
 import numpy as np
 import sys
+try:
+    import wandb
+except:
+    print("wandb not initialized")
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -36,6 +40,7 @@ args = dotdict({
     # 'parallel_block': 5,
     # 'greedy_eps': 50,
 
+    'wandb': True,
     'checkpoint': 'checkpoint_pytorch',
     'load_model': False,
     'load_folder_file': ('checkpoint', 37),
@@ -47,6 +52,11 @@ args = dotdict({
 if __name__=="__main__":
     g = Game()
     nnet = nn(g)
+
+    if args.wandb:
+        wandb.login()
+        wandb.init(project="chinese_checkers", name="pytorch")
+        wandb.config.update(args)
 
     if args.load_model:
         nnet.load_first_checkpoint(args.load_folder_file[0], args.load_folder_file[1])
